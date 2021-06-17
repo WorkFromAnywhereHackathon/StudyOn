@@ -1,0 +1,197 @@
+﻿@page "/events/{eventId}/teams"
+@using StudyOn.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+<h3>Teams</h3>
+
+
+<DxDataGrid Data="@Teams"
+            @ref="@grid"
+            RowRemovingAsync="@OnRowRemoving"
+            RowEditStart="@(dataItem => OnRowEditStarting(dataItem))"
+            RowInsertStart="@(() => OnRowEditStarting(null))"
+            PageSize="20"
+            EditMode="DataGridEditMode.PopupEditForm"
+            ShowDetailRow="true">
+    <Columns>
+        <DxDataGridCommandColumn Width="100px" NewButtonVisible="true" />
+        <DxDataGridColumn Field="@nameof(TeamDto.Name)" />
+        <DxDataGridColumn>
+            <DisplayTemplate>
+                @{
+                    var team = context as TeamDto;
+                    <a href="@team.PassportLink">Passport</a>
+                }
+            </DisplayTemplate>
+        </DxDataGridColumn>
+    </Columns>
+    <DetailRowTemplate>
+        <div>
+            <b>Idea:</b><br />
+            @context.Idea
+        </div>
+        <div>
+            <b>Description:</b><br />
+            <small>
+                @context.Description
+            </small>
+        </div>
+    </DetailRowTemplate>
+
+    <EditFormTemplate>
+        <EditForm Model="@EditContext" Context="EditFormContext" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <DxFormLayout ItemSizeMode="@SizeMode">
+                <DxFormLayoutItem Caption="Name:" ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <DxTextBox @bind-Text="@EditContext.Name"></DxTextBox>
+                    </Template>
+                </DxFormLayoutItem>
+
+                <DxFormLayoutItem Caption="Idea:" ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <DxTextBox @bind-Text="@EditContext.Idea"></DxTextBox>
+                    </Template>
+                </DxFormLayoutItem>
+
+                <DxFormLayoutItem Caption="Passport Link:" ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <DxTextBox @bind-Text="@EditContext.PassportLink"></DxTextBox>
+                    </Template>
+                </DxFormLayoutItem>
+
+                <DxFormLayoutItem Caption="Description:" ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <DxMemo @bind-Text="@EditContext.Description">
+                        </DxMemo>
+                    </Template>
+                </DxFormLayoutItem>
+
+                <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <div class="text-right">
+                            <DxButton RenderStyle="ButtonRenderStyle.Link" SubmitFormOnClick="true" Text="Update" />
+                            <DxButton RenderStyle="ButtonRenderStyle.Link" Click="OnCancelButtonClick" Text="Cancel" />
+                        </div>
+                    </Template>
+                </DxFormLayoutItem>
+            </DxFormLayout>
+        </EditForm>
+    </EditFormTemplate>
+</DxDataGrid>
+
+
+@code {
+
+    DxDataGrid<TeamDto> grid;
+
+    [Parameter]
+    public string EventId { get; set; }
+
+    List<TeamDto> Teams;
+
+    SizeMode SizeMode { get; set; } = SizeMode.Small;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Teams = await Http.GetFromJsonAsync<List<TeamDto>>($"api/events/{EventId}/teams");
+    }
+
+    async Task OnRowRemoving(TeamDto team)
+    {
+        await Http.DeleteAsync($"api/events/{EventId}/teams/{team.Id}");
+        Teams.Remove(team);
+    }
+
+    async Task OnRowInserting(IDictionary<string, object> newValue)
+    {
+        var team = new TeamDto();
+        foreach (var field in newValue.Keys)
+        {
+            switch (field)
+            {
+                case nameof(team.Name):
+                    team.Name = (string)newValue[field];
+                    break;
+                case nameof(team.Description):
+                    team.Description = (string)newValue[field];
+                    break;
+                case nameof(team.Idea):
+                    team.Idea = (string)newValue[field];
+                    break;
+                case nameof(team.PassportLink):
+                    team.PassportLink = (string)newValue[field];
+                    break;
+            }
+        }
+        await Http.PostAsJsonAsync<TeamDto>($"api/events/{EventId}/teams", team);
+        Teams.Add(team);
+    }
+
+    class FormEditContext
+    {
+        public FormEditContext(TeamDto dataItem)
+        {
+            DataItem = dataItem;
+            if (DataItem == null)
+            {
+                DataItem = new TeamDto();
+                IsNewRow = true;
+            }
+            Id = DataItem.Id;
+            Name = DataItem.Name;
+            Idea = DataItem.Idea;
+            Description = DataItem.Description;
+            PassportLink = DataItem.PassportLink;
+        }
+
+        public TeamDto DataItem { get; set; }
+        public bool IsNewRow { get; set; }
+
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public string Idea { get; set; }
+        public string PassportLink { get; set; }
+        public string Description { get; set; }
+
+        public Action StateHasChanged { get; set; }
+    }
+
+    FormEditContext EditContext = null;
+
+
+    void OnRowEditStarting(TeamDto team)
+    {
+        EditContext = new FormEditContext(team);
+        EditContext.StateHasChanged += () => { InvokeAsync(StateHasChanged); };
+    }
+
+    async Task OnCancelButtonClick()
+    {
+        await grid.CancelRowEdit();
+        EditContext = null;
+    }
+
+    async Task HandleValidSubmit()
+    {
+        EditContext.DataItem.Description = EditContext.Description;
+        EditContext.DataItem.Name = EditContext.Name;
+        EditContext.DataItem.Idea = EditContext.Idea;
+        EditContext.DataItem.Id = EditContext.Id;
+        EditContext.DataItem.PassportLink = EditContext.PassportLink;
+
+        var team = EditContext.DataItem;
+        if (EditContext.IsNewRow)
+        {
+            await Http.PostAsJsonAsync<TeamDto>($"api/events/{EventId}/teams", team);
+            Teams.Add(team);
+        }
+        else
+        {
+            await Http.PutAsJsonAsync<TeamDto>($"api/events/{EventId}/teams", team);
+        }
+
+        await grid.CancelRowEdit();
+        EditContext = null;
+    }
+}

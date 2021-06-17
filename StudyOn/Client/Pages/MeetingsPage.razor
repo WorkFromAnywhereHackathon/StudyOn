@@ -1,0 +1,171 @@
+﻿@using StudyOn.Shared
+@using System.Collections.ObjectModel
+
+
+<DxDataGrid @ref="@grid"
+            Data="@Meetings"
+            
+            PageSize="20"
+            ShowDetailRow="true"
+            SelectionMode="DataGridSelectionMode.None"
+            RowRemoving="@((dataItem) => OnRowRemoving(dataItem))"
+            RowEditStart="@(dataItem => OnRowEditStarting(dataItem))"
+            RowInsertStart="@(() => OnRowEditStarting(null))">
+
+
+    <Columns>
+        <DxDataGridCommandColumn Width="100px" NewButtonVisible="true" />
+        <DxDataGridColumn Field="@nameof(MeetingDto.Name)" />
+        <DxDataGridColumn>
+            <DisplayTemplate>
+                @{
+                    var meeting = context as MeetingDto;
+                    <span>@meeting.StartTime.ToString("dd MMMM H:mm") - @meeting.EndTime.ToString("dd MMMM H:mm")</span>
+                }
+            </DisplayTemplate>
+        </DxDataGridColumn>
+    </Columns>
+    <DetailRowTemplate>
+        @context.Description
+    </DetailRowTemplate>
+    <EditFormTemplate>
+        <EditForm Model="@EditContext" Context="EditFormContext" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <DxFormLayout ItemSizeMode="@SizeMode">
+                <DxFormLayoutItem Caption="Name:" ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <DxTextBox @bind-Text="@EditContext.Name"></DxTextBox>
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Start Time:" ColSpanMd="6" Context="FormLayoutContext">
+                    <Template>
+                        <DxDateEdit @bind-Date="@EditContext.StartTime" Format="dd MMMM H:mm"></DxDateEdit>
+                    </Template>
+                </DxFormLayoutItem>
+
+                <DxFormLayoutItem Caption="End Time:" ColSpanMd="6" Context="FormLayoutContext">
+                    <Template>
+                        <DxDateEdit @bind-Date="@EditContext.EndTime" Format="dd MMMM H:mm"></DxDateEdit>
+                    </Template>
+                </DxFormLayoutItem>
+
+                <DxFormLayoutItem Caption="Description:" ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <DxMemo @bind-Text="@EditContext.Description">
+                        </DxMemo>
+                    </Template>
+                </DxFormLayoutItem>
+
+                <DxFormLayoutItem Caption="Expert:" ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        @*<DxCheckBox @bind-Checked="@EditContext.IsMasterClass" LabelPosition="LabelPosition.Right">Master class</DxCheckBox>*@
+                        <DxComboBox Data="@Experts"
+                                    TextFieldName="@nameof(ExpertDto.Name)"
+                                    ValueFieldName="@nameof(ExpertDto.Id)"
+                                    @bind-Value="@EditContext.ExpertId"
+                                    SizeMode="@SizeMode">
+                        </DxComboBox>
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <div class="text-right">
+                            <DxButton RenderStyle="ButtonRenderStyle.Link" SubmitFormOnClick="true" Text="Update" />
+                            <DxButton RenderStyle="ButtonRenderStyle.Link" Click="OnCancelButtonClick" Text="Cancel" />
+                        </div>
+                    </Template>
+                </DxFormLayoutItem>
+            </DxFormLayout>
+        </EditForm>
+    </EditFormTemplate>
+</DxDataGrid>
+
+
+@code {
+
+    DxDataGrid<MeetingDto> grid;
+
+    SizeMode SizeMode { get; set; } = SizeMode.Small;
+
+    [Parameter]
+    public ObservableCollection<MeetingDto> Meetings { get; set; }
+
+    [Parameter]
+    public ObservableCollection<ExpertDto> Experts { get; set; }   
+
+    protected override void OnInitialized()
+    {       
+        
+    }
+
+
+    class FormEditContext
+    {
+        public FormEditContext(MeetingDto dataItem)
+        {
+            DataItem = dataItem;
+            if (DataItem == null)
+            {
+                DataItem = new MeetingDto();
+                IsNewRow = true;
+            }
+
+
+            Name = DataItem.Name;
+            StartTime = DataItem.StartTime;
+            EndTime = DataItem.EndTime;
+            Description = DataItem.Description;
+            ExpertId = DataItem.ExpertId;
+        }
+
+        public MeetingDto DataItem { get; set; }
+        public bool IsNewRow { get; set; }
+
+        public string Name { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public string Description { get; set; }
+        //public bool IsMasterClass { get; set; }
+        public Guid? ExpertId { get; set; }
+
+        public Action StateHasChanged { get; set; }
+    }
+
+    FormEditContext EditContext = null;
+
+    void OnRowEditStarting(MeetingDto meeting)
+    {
+        EditContext = new FormEditContext(meeting);
+        EditContext.StateHasChanged += () => { InvokeAsync(StateHasChanged); };
+    }
+
+    async Task OnCancelButtonClick()
+    {
+        await grid.CancelRowEdit();
+        EditContext = null;
+    }
+
+    async Task HandleValidSubmit()
+    {
+        EditContext.DataItem.Description = EditContext.Description;
+        EditContext.DataItem.Name = EditContext.Name;
+        EditContext.DataItem.StartTime = EditContext.StartTime;
+        EditContext.DataItem.EndTime = EditContext.EndTime;
+        EditContext.DataItem.ExpertId = EditContext.ExpertId;
+
+        if (EditContext.IsNewRow)
+        {
+            Meetings.Add(EditContext.DataItem);
+        }
+
+        await grid.CancelRowEdit();
+        EditContext = null;
+    }
+
+    void OnRowRemoving(MeetingDto meeting)
+    {
+        Meetings.Remove(meeting);
+        InvokeAsync(StateHasChanged);
+    }
+
+}

@@ -1,0 +1,110 @@
+﻿@page "/events/{eventId}"
+@using StudyOn.Shared
+@using System.Collections.Generic
+@using System.Collections.ObjectModel;
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+<h3>My Event</h3>
+
+
+@if (Model != null)
+{
+    <DxFormLayout ItemSizeMode="SizeMode.Medium">
+        <DxFormLayoutItem Caption="Name:" ColSpanMd="12">
+            <Template>
+                <DxTextBox @bind-Text="@Model.Name"></DxTextBox>
+            </Template>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="Theme:" ColSpanMd="12" BeginRow="true">
+            <Template>
+                <DxTextBox @bind-Text="@Model.Theme"></DxTextBox>
+            </Template>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="Start Date:" ColSpanMd="6">
+            <Template>
+                <DxDateEdit @bind-Date="@Model.StartDate"></DxDateEdit>
+            </Template>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="End Date:" ColSpanMd="6">
+            <Template>
+                <DxDateEdit @bind-Date="@Model.EndDate"></DxDateEdit>
+            </Template>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="Tags:" ColSpanMd="12" BeginRow="true">
+            <Template>
+                <DxTagBox Data="@Tags"
+                          TData="string"
+                          TValue="string"
+                          AllowCustomTags="true"
+                          @bind-Tags="@Model.Tags">
+                </DxTagBox>
+            </Template>
+        </DxFormLayoutItem>
+
+    </DxFormLayout>
+
+    <DxButton RenderStyle="ButtonRenderStyle.Primary" Click="Add" RenderStyleMode="ButtonRenderStyleMode.Contained" Text="Add Event" SizeMode="SizeMode.Medium" />
+
+    <DxTabs>
+        <DxTabPage Text="Meetings">
+            <MeetingsPage Meetings="Model.Meetings" Experts="Model.Experts"></MeetingsPage>
+        </DxTabPage>
+        <DxTabPage Text="Experts">
+            <ExpertsPage Experts="Model.Experts"></ExpertsPage>
+        </DxTabPage>
+
+    </DxTabs>
+}
+else
+{
+    <p>
+        Loading...
+    </p>
+}
+
+
+
+@code {
+
+    [Parameter]
+    public string EventId { get; set; }
+
+    public AddEventModel Model { get; set; }
+
+    private Guid customerId = Guid.Parse("544c9ade-15fd-42e1-960e-41cbb963fedc");//get from auth token;
+
+
+    async Task Add(MouseEventArgs args)
+    {
+        Model.CustomerId = customerId;
+        var response = await Http.PostAsJsonAsync<AddEventModel>($"api/customers/{customerId}/events", Model);
+        NavigationManager.NavigateTo("/events");
+    }
+
+    public IEnumerable<string> Tags { get; set; } = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var educationEvent = await Http.GetFromJsonAsync<EventDto>($"api/customers/{customerId}/events/{EventId}");
+        var experts = await Http.GetFromJsonAsync<List<ExpertDto>>($"api/events/{EventId}/experts");
+        var meetings = await Http.GetFromJsonAsync<List<MeetingDto>>($"api/events/{EventId}/meetings");
+        
+        Model = new AddEventModel()
+        {
+            Id = educationEvent.Id,
+            Name = educationEvent.Name,
+            Description = educationEvent.Description,
+            Theme = educationEvent.Theme,
+            CustomerId = educationEvent.CustomerId,
+            StartDate = educationEvent.StartDate,
+            EndDate = educationEvent.EndDate,
+            Experts = new ObservableCollection<ExpertDto>(experts),
+            Meetings = new ObservableCollection<MeetingDto>(meetings),
+        };
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,68 @@
+﻿@page "/events"
+@page "/"
+@using StudyOn.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+<h3>My Events</h3>
+
+
+<DxDataGrid Data="@Events"
+            ShowDetailRow="true"
+            RowRemovingAsync="@OnRowRemoving"
+            RowInsertStart="@OnRowInsertStart"
+            RowEditStart="@(dataItem => OnRowEditStarting(dataItem))"
+            PageSize="5">
+    <Columns>
+        <DxDataGridCommandColumn Width="100px" />
+        <DxDataGridColumn Field="@nameof(EventDto.Name)" />
+        <DxDataGridColumn Field="@nameof(EventDto.Theme)" />
+        <DxDataGridDateEditColumn Field="@nameof(EventDto.StartDate)" DisplayFormat="D" />
+        <DxDataGridDateEditColumn Field="@nameof(EventDto.EndDate)" DisplayFormat="D" />
+        <DxDataGridColumn>
+            <DisplayTemplate>
+                @{
+                    var eventId = (context as EventDto).Id;
+                }
+                <div class="text-right">
+                    <DxButton RenderStyle="ButtonRenderStyle.Link" SubmitFormOnClick="false" Click="@((e)=>{NavigateTeams(eventId);})" Text="Teams" />
+                </div>
+            </DisplayTemplate>
+        </DxDataGridColumn>
+    </Columns>
+    <DetailRowTemplate>
+        @context.Description
+    </DetailRowTemplate>
+</DxDataGrid>
+
+
+@code {
+
+    List<EventDto> Events;
+
+    private Guid customerId = Guid.Parse("544c9ade-15fd-42e1-960e-41cbb963fedc");//get from auth token;
+    protected override async Task OnInitializedAsync()
+    {
+        Events = await Http.GetFromJsonAsync<List<EventDto>>($"api/customers/{customerId}/events");
+    }
+
+    void OnRowInsertStart()
+    {
+        NavigationManager.NavigateTo("/events/add");
+    }
+
+    void OnRowEditStarting(EventDto educationEvent)
+    {
+        NavigationManager.NavigateTo($"/events/{educationEvent.Id}");
+    }
+
+    void NavigateTeams(Guid eventId)
+    {
+        NavigationManager.NavigateTo($"/events/{eventId}/teams");
+    }
+
+    async Task OnRowRemoving(EventDto dataItem)
+    {
+        await Http.DeleteAsync($"api/customers/{customerId}/events/{dataItem.Id}");
+        Events.Remove(dataItem);
+    }
+}

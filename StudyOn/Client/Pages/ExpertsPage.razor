@@ -1,0 +1,202 @@
+﻿@using StudyOn.Shared
+@using System.Collections.ObjectModel
+@inject NavigationManager NavigationManager
+<style>
+    .expert_photo {
+        border-radius: 50%;
+        width: 100px;
+        height: 100px;
+    }
+</style>
+
+@if (Experts != null)
+{
+    <DxDataGrid @ref="@grid"
+                Data="@Experts"
+                PageSize="10"
+                ShowDetailRow="true"
+                SelectionMode="DataGridSelectionMode.None"
+                RowRemoving="@((dataItem) => OnRowRemoving(dataItem))"
+                RowEditStart="@(dataItem => OnRowEditStarting(dataItem))"
+                RowInsertStart="@(() => OnRowEditStarting(null))">
+
+
+        <Columns>
+            <DxDataGridCommandColumn Width="100px" NewButtonVisible="true" />
+            <DxDataGridColumn Width="110px" Field="@nameof(ExpertDto.Photo)">
+                <DisplayTemplate>
+                    @{
+                        var expert = context as ExpertDto;
+                    }
+                    <img class="expert_photo" src="@expert.Photo" />
+                </DisplayTemplate>
+            </DxDataGridColumn>
+            <DxDataGridColumn>
+                <DisplayTemplate>
+                    @{
+                        var expert = context as ExpertDto;
+                        <span>@expert.FirstName @expert.LastName</span>
+                    }
+                </DisplayTemplate>
+            </DxDataGridColumn>
+            <DxDataGridColumn Field="@nameof(ExpertDto.Description)">
+
+            </DxDataGridColumn>
+            @*<DxDataGridDateEditColumn Field="@nameof(ExpertDto.DateOfBirth)" DisplayFormat="D" />*@
+        </Columns>
+        <DetailRowTemplate>
+            @context.Description
+        </DetailRowTemplate>
+        <EditFormTemplate>
+            <EditForm Model="@EditContext" Context="EditFormContext" OnValidSubmit="@HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <DxFormLayout ItemSizeMode="@SizeMode">
+                    <DxFormLayoutItem Caption="First Name:" ColSpanMd="6" Context="FormLayoutContext">
+                        <Template>
+                            <DxTextBox @bind-Text="@EditContext.FirstName"></DxTextBox>
+                        </Template>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem Caption="Last Name:" ColSpanMd="6" Context="FormLayoutContext">
+                        <Template>
+                            <DxTextBox @bind-Text="@EditContext.LastName"></DxTextBox>
+                        </Template>
+                    </DxFormLayoutItem>
+
+                    <DxFormLayoutItem Caption="Date Of Birth:" ColSpanMd="6" Context="FormLayoutContext">
+                        <Template>
+                            <DxDateEdit @bind-Date="@EditContext.DateOfBirth" Format="D"></DxDateEdit>
+                        </Template>
+                    </DxFormLayoutItem>
+
+                    <DxFormLayoutItem Caption="Description:" ColSpanMd="12" Context="FormLayoutContext">
+                        <Template>
+                            <DxMemo @bind-Text="@EditContext.Description">
+                            </DxMemo>
+                        </Template>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="12" Caption="Photo:" Context="FormLayoutContext">
+                        @*<Template>
+                                <DxUpload Name="myFile" UploadUrl="@GetUploadUrl($"api/Upload/UploadChunkFile")"
+                                          ChunkSize="200000" MaxFileSize="15000000" FileUploaded="@OnFileUploaded">
+                                </DxUpload>
+                            </Template>*@
+                        <Template>
+                            <DxTextBox @bind-Text="@EditContext.Photo"></DxTextBox>
+                        </Template>
+                    </DxFormLayoutItem>
+                    <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                        <Template>
+                            <div class="text-right">
+                                <DxButton RenderStyle="ButtonRenderStyle.Link" SubmitFormOnClick="true" Text="Update" />
+                                <DxButton RenderStyle="ButtonRenderStyle.Link" Click="OnCancelButtonClick" Text="Cancel" />
+                            </div>
+                        </Template>
+                    </DxFormLayoutItem>
+
+                </DxFormLayout>
+            </EditForm>
+        </EditFormTemplate>
+    </DxDataGrid>
+}
+else
+{
+    <p>
+        Loading...
+    </p>
+}
+
+@code {
+    DxDataGrid<ExpertDto> grid;
+
+    SizeMode SizeMode { get; set; } = SizeMode.Small;
+
+    [Parameter]
+    public ObservableCollection<ExpertDto> Experts { get; set; }
+
+    protected override void OnInitialized()
+    {
+
+    }
+
+    void OnFileUploaded(FileUploadEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+
+    protected string GetUploadUrl(string url)
+    {
+        return NavigationManager.ToAbsoluteUri(url).AbsoluteUri;
+    }
+
+
+    class FormEditContext
+    {
+        public FormEditContext(ExpertDto dataItem)
+        {
+            DataItem = dataItem;
+            if (DataItem == null)
+            {
+                DataItem = new ExpertDto();
+                IsNewRow = true;
+            }
+
+            Id = DataItem.Id;
+            FirstName = DataItem.FirstName;
+            LastName = DataItem.LastName;
+            DateOfBirth = DataItem.DateOfBirth;
+            Description = DataItem.Description;
+            Photo = DataItem.Photo;
+
+        }
+
+        public ExpertDto DataItem { get; set; }
+        public bool IsNewRow { get; set; }
+
+        public Guid Id { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string Description { get; set; }
+        public string Photo { get; set; }
+
+        public Action StateHasChanged { get; set; }
+    }
+
+    FormEditContext EditContext = null;
+
+    void OnRowEditStarting(ExpertDto expert)
+    {
+        EditContext = new FormEditContext(expert);
+        EditContext.StateHasChanged += () => { InvokeAsync(StateHasChanged); };
+    }
+
+    async Task OnCancelButtonClick()
+    {
+        await grid.CancelRowEdit();
+        EditContext = null;
+    }
+
+    async Task HandleValidSubmit()
+    {
+        EditContext.DataItem.Description = EditContext.Description;
+        EditContext.DataItem.FirstName = EditContext.FirstName;
+        EditContext.DataItem.LastName = EditContext.LastName;
+        EditContext.DataItem.DateOfBirth = EditContext.DateOfBirth;
+        EditContext.DataItem.Id = EditContext.Id;
+        EditContext.DataItem.Photo = EditContext.Photo;
+        if (EditContext.IsNewRow)
+        {
+            Experts.Add(EditContext.DataItem);
+        }
+
+        await grid.CancelRowEdit();
+        EditContext = null;
+    }
+
+    void OnRowRemoving(ExpertDto expert)
+    {
+        Experts.Remove(expert);
+        InvokeAsync(StateHasChanged);
+    }
+}
