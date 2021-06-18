@@ -1,0 +1,100 @@
+﻿
+@page "/teams/{teamId}/activities"
+@using StudyOn.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+<h3>Team Activities</h3>
+@using BlazorTimeline
+
+<DxButton Text="New Activity"
+          RenderStyle="ButtonRenderStyle.Secondary"
+          Click="()=>PopupVisible=true"/>
+
+<DxPopup @bind-Visible="@PopupVisible">
+    <EditForm Model="@AddTeamActivityModel"
+              Context="EditFormContext"
+              OnValidSubmit="@HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <DxFormLayout>
+
+            <DxFormLayoutItem Caption="Name:" ColSpanMd="12">
+                <Template>
+                    <DxTextBox @bind-Text="@AddTeamActivityModel.Name" />
+                </Template>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Description:" ColSpanMd="12" BeginRow="true">
+                <Template>
+                    <DxMemo @bind-Text="@AddTeamActivityModel.Description">
+                    </DxMemo>
+                </Template>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Date:" ColSpanMd="12" BeginRow="true">
+                <Template>
+                    <DxDateEdit @bind-Date="@AddTeamActivityModel.Date" />
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem ColSpanMd="12" BeginRow="true">
+                <Template>
+                    <DxButton SubmitFormOnClick="true"
+                              Text="Submit"
+                              RenderStyle="ButtonRenderStyle.Secondary" />
+                </Template>
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </EditForm>
+</DxPopup>
+
+
+<Timeline Title="Activities"
+          TitleBgColor="#554DE0"
+          TitleColor="#FFFFFF"
+          TextColor="#F3F3F3"
+          TextBgColor="#212121"
+          ItemPositionOption="@ItemPositionOption.AutoAltering">
+
+
+    @foreach (var activity in TeamActivities)
+    {
+        <TimelineItem Title="@activity.Name" Time="@activity.Date.ToShortDateString()">
+            <div>@activity.Description </div>
+
+
+        </TimelineItem>
+    }
+</Timeline>
+
+
+
+@code {
+
+    [Parameter]
+    public string TeamId { get; set; }
+
+    List<TeamActivityDto> TeamActivities = new List<TeamActivityDto>();
+
+    bool PopupVisible { get; set; } = false;
+
+    AddTeamActivityModel AddTeamActivityModel = new AddTeamActivityModel()
+    {
+        Date = DateTime.UtcNow
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        //TeamActivities = await Http.GetFromJsonAsync<List<TeamActivityDto>>($"api/teams/{TeamId}/activities");
+    }
+
+    void HandleValidSubmit()
+    {
+        //var response = await Http.PostAsJsonAsync<AddTeamActivityModel>($"api/teams/{TeamId}/activities", AddTeamActivityModel);
+        var teamActivity = new TeamActivityDto()
+        {
+            Name = AddTeamActivityModel.Name,
+            Description = AddTeamActivityModel.Description,
+            Date = AddTeamActivityModel.Date
+        };
+        TeamActivities.Add(teamActivity);
+        PopupVisible = false;
+    }
+}

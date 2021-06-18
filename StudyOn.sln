@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StudyOn.Shared", "StudyOn\S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StudyOn.Bot", "StudyOn.Bot\StudyOn.Bot.csproj", "{DF5DAFBC-DD9C-4E56-A237-E53910AEC936}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudyOn.Bot.LP", "StudyOn.Bot.LP\StudyOn.Bot.LP.csproj", "{5F82F3DD-9EB0-45F6-9217-3CC57836E1F5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StudyOn.Bot.LP", "StudyOn.Bot.LP\StudyOn.Bot.LP.csproj", "{5F82F3DD-9EB0-45F6-9217-3CC57836E1F5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

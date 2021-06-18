@@ -19,13 +19,15 @@ namespace StudyOn.Server.Data
 
         public DbSet<Customer> Customers { get; set; }
         public DbSet<EducationEvent> Events { get; set; }
-        public DbSet<Team> Teams { get; set; }        
+         
         public DbSet<EventExpert> EventExperts { get; set; }
         public DbSet<Expert> Experts { get; set; }
 
         public DbSet<Meeting> Meetings { get; set; }
-        public DbSet<MasterClass> MasterClasses { get; set; }    
+        public DbSet<MasterClass> MasterClasses { get; set; }
 
+        public DbSet<Team> Teams { get; set; }
+        public DbSet<TeamActivity> Activities { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

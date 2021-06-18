@@ -24,6 +24,14 @@
                 }
             </DisplayTemplate>
         </DxDataGridColumn>
+        <DxDataGridColumn>
+            <DisplayTemplate>
+                @{
+                    var team = context as TeamDto;
+                    <a href="/teams/@team.Id/activities">Activities</a>
+                }
+            </DisplayTemplate>
+        </DxDataGridColumn>
     </Columns>
     <DetailRowTemplate>
         <div>

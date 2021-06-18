@@ -5,22 +5,22 @@ using System.Threading.Tasks;
 
 namespace StudyOn.Server.Entities
 {
-    public class Team
+    public class TeamActivity : BaseEntity
     {
         public Guid Id { get; set; }
 
-        public Guid EventId { get; set; }
+        public Guid TeamId { get; set; }
 
-        public EducationEvent Event { get; set; }
+        public Team Team { get; set; }
+
+        public DateTime Date { get; set; }
 
         public string Name { get; set; }
 
-        public string Idea { get; set; }
-     
         public string Description { get; set; }
 
-        public string PassportLink { get; set; }
+        public string Image { get; set; }
 
-        public ICollection<TeamActivity> Activities { get; set; }
+        public string Link { get; set; }
     }
 }
