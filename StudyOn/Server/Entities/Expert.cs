@@ -22,6 +22,10 @@ namespace StudyOn.Server.Entities
         public ICollection<EventExpert> Events { get; set; }
 
         public ICollection<MasterClass> MasterClasses { get; set; }
+        
+        public ICollection<TeamFeedback> Feedbacks { get; set; }
+
+
 
     }
 }

@@ -29,6 +29,8 @@ namespace StudyOn.Server.Data
         public DbSet<Team> Teams { get; set; }
         public DbSet<TeamActivity> Activities { get; set; }
 
+        public DbSet<TeamFeedback> TeamFeedbacks { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

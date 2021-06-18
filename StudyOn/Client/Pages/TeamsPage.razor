@@ -24,14 +24,14 @@
                 }
             </DisplayTemplate>
         </DxDataGridColumn>
-        <DxDataGridColumn>
+        @*<DxDataGridColumn>
             <DisplayTemplate>
                 @{
                     var team = context as TeamDto;
                     <a href="/teams/@team.Id/activities">Activities</a>
                 }
             </DisplayTemplate>
-        </DxDataGridColumn>
+        </DxDataGridColumn>*@
     </Columns>
     <DetailRowTemplate>
         <div>
@@ -43,6 +43,14 @@
             <small>
                 @context.Description
             </small>
+        </div>
+
+        <div>
+            <a href="/teams/@context.Id/activities">Activities</a>
+        </div>
+
+        <div>
+            <a href="/teams/@context.Id/feedback">Add Feedback</a>
         </div>
     </DetailRowTemplate>
 

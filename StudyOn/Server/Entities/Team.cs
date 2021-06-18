@@ -22,5 +22,7 @@ namespace StudyOn.Server.Entities
         public string PassportLink { get; set; }
 
         public ICollection<TeamActivity> Activities { get; set; }
+
+        public ICollection<TeamFeedback> Feedbacks { get; set; }
     }
 }

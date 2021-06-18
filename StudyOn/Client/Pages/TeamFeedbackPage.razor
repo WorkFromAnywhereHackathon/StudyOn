@@ -1,0 +1,103 @@
+﻿
+@page "/teams/{teamId}/feedback"
+@using StudyOn.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+<h3>Please leave feedback</h3>
+@if (Team != null)
+{
+    <h4>@Team.Name</h4>
+    <div>
+        @Team.Idea
+    </div>
+    <div>
+        @Team.Description
+    </div>
+}
+
+<EditForm Model="@AddTeamFeedbackModel"
+          Context="EditFormContext"
+          OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <DxFormLayout CaptionPosition="CaptionPosition.Vertical">
+
+        <DxFormLayoutItem Caption="Problems:" ColSpanMd="12">
+            <Template>
+                <DxMemo @bind-Text="@AddTeamFeedbackModel.Problems" Rows="7" ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                        NullText="Describe the main problems of the project"></DxMemo>
+            </Template>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem Caption="Ideas:" ColSpanMd="12" BeginRow="true">
+            <Template>
+                <DxMemo @bind-Text="@AddTeamFeedbackModel.Ideas" Rows="7" ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                        NullText="Describe the recommendations for the project">
+                </DxMemo>
+            </Template>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem Caption="Support:" ColSpanMd="12" BeginRow="true">
+            <Template>
+                <DxMemo @bind-Text="@AddTeamFeedbackModel.Support" Rows="7" ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                        NullText="How can you help the project in the future?"></DxMemo>
+            </Template>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="Share:" ColSpanMd="12" BeginRow="true">
+            <Template>
+                <DxCheckBox CheckType="CheckType.Switch"
+                            @bind-Checked="@AddTeamFeedbackModel.ShareAnswers"
+                            Alignment="CheckBoxContentAlignment.Left">
+                    Share answers with team?
+                </DxCheckBox>
+            </Template>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem ColSpanMd="12" BeginRow="true">
+            <Template>
+                <DxButton SubmitFormOnClick="true"
+                          Text="Submit"
+                          RenderStyle="ButtonRenderStyle.Primary" />
+            </Template>
+        </DxFormLayoutItem>
+
+
+    </DxFormLayout>
+</EditForm>
+
+
+@code {
+
+    [Parameter]
+    public string TeamId { get; set; }
+
+    List<TeamFeedbackDto> TeamFeedbacks = new List<TeamFeedbackDto>();
+
+    bool PopupVisible { get; set; } = false;
+
+    TeamDto Team;
+
+    AddFeedbackModel AddTeamFeedbackModel = new AddFeedbackModel()
+    {
+
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        Team = await Http.GetFromJsonAsync<TeamDto>($"api/events/1159ab52-d7f5-4c1c-ab3e-08d8fbebbe7c/teams/{TeamId}");
+    }
+
+    void HandleValidSubmit()
+    {
+        //var response = await Http.PostAsJsonAsync<AddTeamActivityModel>($"api/teams/{TeamId}/activities", AddTeamActivityModel);
+        var teamFeedback = new TeamFeedbackDto()
+        {
+            Problems = AddTeamFeedbackModel.Problems,
+            Ideas = AddTeamFeedbackModel.Ideas,
+            Support = AddTeamFeedbackModel.Support,
+            CreatedAt = DateTime.Now
+
+        };
+        TeamFeedbacks.Add(teamFeedback);
+
+        NavigationManager.NavigateTo($"/teams/{TeamId}/activities");
+    }
+}

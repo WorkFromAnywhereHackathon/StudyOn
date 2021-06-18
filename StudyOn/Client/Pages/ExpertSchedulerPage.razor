@@ -1,0 +1,103 @@
+﻿@page "/scheduler"
+@using System.Globalization;
+<h3>Expert Scheduler</h3>
+
+
+<DxScheduler DataStorage="@DataStorage">
+    <DxSchedulerWeekView ShowWorkTimeOnly="true" />
+</DxScheduler>
+
+@code {
+
+
+    public class Appointment
+    {
+        public Appointment() { }
+
+        public int AppointmentType { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public string Caption { get; set; }
+        public string Description { get; set; }
+        public string Location { get; set; }
+        public int Label { get; set; }
+        public int Status { get; set; }
+        public bool AllDay { get; set; }
+    }
+
+    public static partial class AppointmentCollection
+    {
+        public static List<Appointment> GetAppointments()
+        {
+            DateTime date = DateTime.Today;
+            var dataSource = new List<Appointment>() {
+            new Appointment {
+                Caption = "Upgrade Personal Computers",
+                StartDate = date + (new TimeSpan(0,  14, 0, 0)),
+                EndDate = date + (new TimeSpan(0, 16, 30, 0)),
+                Label = 1,
+                Status = 1
+            },
+            new Appointment {
+                Caption = "Install New Router in Dev Room",
+                StartDate = date + (new TimeSpan(2, 11, 30, 0)),
+                EndDate = date + (new TimeSpan(2, 13, 30, 0)),
+                Label = 6,
+                Status = 1
+            },
+            new Appointment {
+                Caption = "New Brochures",
+                StartDate = date + (new TimeSpan(2, 15, 00, 0)),
+                EndDate = date + (new TimeSpan(2, 16, 45, 0)),
+                Label = 8,
+                Status = 1
+            },
+            new Appointment {
+                Caption = "Approve Personal Computer Upgrade Plan",
+                StartDate = date + (new TimeSpan(3, 13, 30, 0)),
+                EndDate = date + (new TimeSpan(3, 16, 0, 0)),
+                Label = 1,
+                Status = 1
+            },
+            new Appointment {
+                Caption = "Customer Workshop",
+                StartDate = date + (new TimeSpan(4,  11, 0, 0)),
+                EndDate = date + (new TimeSpan(4, 12, 0, 0)),
+                AllDay = true,
+                Label = 8,
+                Status = 1
+            },
+            new Appointment {
+                Caption = "Upgrade Server Hardware",
+                StartDate = date + (new TimeSpan(6, 11, 0, 0)),
+                EndDate = date + (new TimeSpan(6, 13, 30, 0)),
+                Label = 6,
+                Status = 1
+            }
+        };
+            return dataSource;
+        }
+
+        private static string ToString(DateTime dateTime)
+        {
+            return dateTime.ToString(CultureInfo.InvariantCulture);
+        }
+    }
+
+    DxSchedulerDataStorage DataStorage = new DxSchedulerDataStorage()
+    {
+        AppointmentsSource = AppointmentCollection.GetAppointments(),
+        AppointmentMappings = new DxSchedulerAppointmentMappings()
+        {
+            Type = "AppointmentType",
+            Start = "StartDate",
+            End = "EndDate",
+            Subject = "Caption",
+            AllDay = "AllDay",
+            Location = "Location",
+            Description = "Description",
+            LabelId = "Label",
+            StatusId = "Status"
+        }
+    }; 
+}
